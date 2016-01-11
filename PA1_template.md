@@ -1,6 +1,11 @@
-# Reproducible Research: Peer Assessment 1
+---
+title: 'Reproducible Research: Peer Assessment 1'
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
 <!--
-# setwd("Z:/docs/work/datasci/5reproducible-research/RepData_PeerAssessment1")
 # library(knitr)
 # knit2html("PA1_template.Rmd")
 -->
@@ -20,22 +25,6 @@ activity<-read.csv("activity.csv",colClasses=c("integer","Date","integer"))
 
 ```r
 library(dplyr)
-```
-
-```
-## 
-## Attaching package: 'dplyr'
-## 
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-## 
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
 steps_per_day <- activity %>% filter(!is.na(steps)) %>% group_by(date) %>% summarize(steps = sum(steps))
 ```
 
@@ -45,7 +34,7 @@ steps_per_day <- activity %>% filter(!is.na(steps)) %>% group_by(date) %>% summa
 hist(steps_per_day$steps, breaks=30, xlab="Steps", main="Histogram of Steps per Day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
 
 **3. Calculate and report the mean and median of the total number of steps taken per day**
 
@@ -78,7 +67,7 @@ average_fivemin_steps<-average_steps(activity)
 plot(average_fivemin_steps, type="l", ylab="Steps", xlab="Interval", main="Plot of Average Daily Activity Pattern")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
 
 **2. 5-minute Interval with Most Number of Steps on average**
 
@@ -125,22 +114,6 @@ for(i in 1:nrow(activity)){
 
 
 ```r
-length(new_steps)
-```
-
-```
-## [1] 17568
-```
-
-```r
-nrow(activity)# 4 missing
-```
-
-```
-## [1] 17568
-```
-
-```r
 activity$steps<-new_steps
 ```
 
@@ -152,7 +125,7 @@ steps_per_day <- activity %>% filter(!is.na(steps)) %>% group_by(date) %>% summa
 hist(steps_per_day$steps, breaks=30, xlab="Steps", main="Histogram of Steps per Day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
 
 ```r
 mean(steps_per_day$steps)
@@ -187,8 +160,10 @@ plot(weekday_steps, type="l", ylab="Number of steps", xlab="Interval", main="Wee
 plot(weekend_steps, type="l", ylab="Number of steps", xlab="Interval", main="Weekend Steps")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-11-1.png) 
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
 
 ```r
 par(mfrow=c(1,1))
 ```
+
+The weekday data shows a clearer patch of activity in the monrning, and on weekends there appears to be more activity during the day.
