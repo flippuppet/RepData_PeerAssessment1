@@ -9,7 +9,9 @@
 ## Loading and preprocessing the data
 
 ```r
-unzip("activity.zip")
+if (!file.exists("activity.csv")) {# check if exists
+  unzip("activity.zip")
+}
 activity<-read.csv("activity.csv",colClasses=c("integer","Date","integer"))
 ```
 
@@ -34,22 +36,7 @@ library(dplyr)
 ```
 
 ```r
-g_date <- group_by(activity, date)
-steps_per_day<-summarize(g_date, steps = sum(steps, na.rm = TRUE))
-head(steps_per_day)
-```
-
-```
-## Source: local data frame [6 x 2]
-## 
-##         date steps
-##       (date) (int)
-## 1 2012-10-01     0
-## 2 2012-10-02   126
-## 3 2012-10-03 11352
-## 4 2012-10-04 12116
-## 5 2012-10-05 13294
-## 6 2012-10-06 15420
+steps_per_day <- activity %>% filter(!is.na(steps)) %>% group_by(date) %>% summarize(steps = sum(steps))
 ```
 
 **2. Historgram of Steps Per day**
@@ -63,11 +50,11 @@ hist(steps_per_day$steps, breaks=30, xlab="Steps", main="Histogram of Steps per 
 **3. Calculate and report the mean and median of the total number of steps taken per day**
 
 ```r
-mean(steps_per_day$steps)
+mean(steps_per_day$steps)# no NAs so no need to remove
 ```
 
 ```
-## [1] 9354.23
+## [1] 10766.19
 ```
 
 ```r
@@ -75,7 +62,7 @@ median(steps_per_day$steps)
 ```
 
 ```
-## [1] 10395
+## [1] 10765
 ```
 
 
@@ -84,13 +71,11 @@ median(steps_per_day$steps)
 **1. Plot of Average Daily Activity Pattern**
 
 ```r
-average_steps<-function(activity){
-  days<-length(unique(activity$date))
-  g <- group_by(activity, interval)
-  average_steps<-summarize(g, average = sum(steps, na.rm = TRUE)/days)
+average_steps<-function(activity){# defined so we can use later
+  activity %>% filter(!is.na(steps)) %>% group_by(interval) %>% summarize(steps = mean(steps))
 }
 average_fivemin_steps<-average_steps(activity)
-plot(average_fivemin_steps, type="l", ylab="Number of steps", xlab="Interval", main="Plot of Average Daily Activity Pattern")
+plot(average_fivemin_steps, type="l", ylab="Steps", xlab="Interval", main="Plot of Average Daily Activity Pattern")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
@@ -98,7 +83,7 @@ plot(average_fivemin_steps, type="l", ylab="Number of steps", xlab="Interval", m
 **2. 5-minute Interval with Most Number of Steps on average**
 
 ```r
-max_interval<-average_fivemin_steps[which.max(average_fivemin_steps$average),]
+max_interval<-average_fivemin_steps[which.max(average_fivemin_steps$steps),]
 max_interval$interval
 ```
 
@@ -106,7 +91,7 @@ max_interval$interval
 ## [1] 835
 ```
 
-## Imputing missing values
+## Inputing missing values
 **1. Total number of missing values:**
 
 ```r
@@ -122,15 +107,15 @@ sum(is.na(activity$steps))
 
 
 ```r
-set_step<-function(r){
-  step<-r$steps
+set_step<-function(row){
+  step<-row$steps
   if(is.na(step)){
     # set step to mean for the day
-    step<-average_fivemin_steps[average_fivemin_steps$interval==r$interval,]$average
-  } 
+    step<-average_fivemin_steps[average_fivemin_steps$interval==row$interval,]$steps
+  }
   step
 }
-new_steps<-integer()
+new_steps<-numeric()
 for(i in 1:nrow(activity)){
   new_steps<-c(new_steps,set_step(activity[i,]))
 }
@@ -140,6 +125,22 @@ for(i in 1:nrow(activity)){
 
 
 ```r
+length(new_steps)
+```
+
+```
+## [1] 17568
+```
+
+```r
+nrow(activity)# 4 missing
+```
+
+```
+## [1] 17568
+```
+
+```r
 activity$steps<-new_steps
 ```
 
@@ -147,8 +148,7 @@ activity$steps<-new_steps
 
 ```r
 # recalculate steps per day
-g_date <- group_by(activity, date)
-steps_per_day<-summarize(g_date, steps = sum(steps, na.rm = TRUE))
+steps_per_day <- activity %>% filter(!is.na(steps)) %>% group_by(date) %>% summarize(steps = sum(steps))
 hist(steps_per_day$steps, breaks=30, xlab="Steps", main="Histogram of Steps per Day")
 ```
 
@@ -159,7 +159,7 @@ mean(steps_per_day$steps)
 ```
 
 ```
-## [1] 10581.01
+## [1] 10766.19
 ```
 
 ```r
@@ -167,13 +167,10 @@ median(steps_per_day$steps)
 ```
 
 ```
-## [1] 10395
+## [1] 10766.19
 ```
 
-The mean differs hugely from, as it is larger. Substituting the mean for the NA values increases the mean probably to an unrealistically large value. However the median does not change, this is as there are still the middle value.
-
-
-
+The mean differs, as it is larger and now the same as the median(the mean is no longer skewed).
 
 
 
@@ -185,18 +182,12 @@ activity_weekend_index<-activity$day==c("Saturday","Sunday")
 weekend_steps<-average_steps(activity[activity_weekend_index,])
 weekday_steps<-average_steps(activity[!activity_weekend_index,])
 
-plot(all_steps, type="l")
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-11-1.png) 
-
-```r
 par(mfrow=c(2,1))# bit rough should do this in ggplot
 plot(weekday_steps, type="l", ylab="Number of steps", xlab="Interval", main="Weekday Steps")
 plot(weekend_steps, type="l", ylab="Number of steps", xlab="Interval", main="Weekend Steps")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-11-2.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png) 
 
 ```r
 par(mfrow=c(1,1))
